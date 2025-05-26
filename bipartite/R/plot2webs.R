@@ -32,8 +32,8 @@ plot2webs <- function(web1,
                       curved_links = FALSE,
                       arrow = "no",
                       spacing = "auto",
-                      space_lower = 0.2,
-                      space_higher = 0.2,
+                      # space_lower = 0.2,
+                      # space_higher = 0.2,
                       mar = c(1, 1, 1, 1),
                       mai = NULL,
                       plot_axes = FALSE) {
@@ -261,6 +261,23 @@ plot2webs <- function(web1,
     }
   }
 
+  ################ PLOT 1 (LEFT / LOWER) ###################################
+
+  c_m_t_width <- max(strwidth(c_names, units = "inches", cex = text_size))
+  r_m_t_width_1 <- max(strwidth(r_names_1, units = "inches", cex = text_size))
+  r_m_t_width_2 <- max(strwidth(r_names_2, units = "inches", cex = text_size))
+
+  # Create the left / upper half of the plot
+  if (horizontal) {
+    par(fig = c(0, 0.5, 0, 1),
+        mai = c(0.5, r_m_t_width_1 + 0.1, 0.5, c_m_t_width/2 + 0.1))
+  } else {
+    par(fig = c(0, 1, 0, 0.5),
+        mai = c(r_m_t_width_1 + 0.1, 0.5, c_m_t_width/2 + 0.1, 0.5))
+  }
+  plot(0, type = "n", ylim = c(0, 1), xlim = c(0, 1),
+       axes = plot_axes, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
+
   r_abuns_1 <- rowSums(web1)
   r_abuns_2 <- rowSums(web2)
   if (!is.null(lower_abundances)) {
@@ -300,8 +317,18 @@ plot2webs <- function(web1,
     c_prop_sizes_2 <- c_abuns_2 / total_abuns
   }
 
-  # c_prop_sizes_1 <- colSums(web1) / sum(colSums(web1))
-  # c_prop_sizes_2 <- colSums(web2) / sum(colSums(web2))
+  if (spacing == "auto") {
+    c_str_height <- sum(strheight(c_names, cex = text_size))
+    r_str_height_1 <- sum(strheight(r_names_1, cex = text_size))
+    r_str_height_2 <- sum(strheight(r_names_2, cex = text_size))
+
+    max_str_height <- max(c_str_height, r_str_height_1, r_str_height_2)
+    space_higher <- 1.05 * max_str_height
+    space_lower <- 1.05 * max_str_height
+  } else {
+    space_higher <- spacing
+    space_lower <- spacing
+  }
 
   c_prop_sizes_max <- pmax(c_prop_sizes_1, c_prop_sizes_2)
 
@@ -338,11 +365,24 @@ plot2webs <- function(web1,
   } else if (scaling == "relative") {
     c_prop_sizes_1 <- c_prop_sizes_1 / sum(c_prop_sizes_max)
     c_prop_sizes_2 <- c_prop_sizes_2 / sum(c_prop_sizes_max)
-    #print(sum(r_prop_sizes_1))
-    #print(sum(r_prop_sizes_2))
-    #print(sum(c_prop_sizes_1))
-    #print(sum(c_prop_sizes_2))
   }
+
+  # if (scaling == "absolute") {
+  #   r_prop_sizes_1 <- (1 - space_lower) * r_prop_sizes_1 / max_prop_size
+  #   r_prop_sizes_2 <- (1 - space_lower) * r_prop_sizes_2 / max_prop_size
+  #   r_space_1 <- (1 - sum(r_prop_sizes_1)) / (nr_1 - 1)
+  #   r_space_2 <- (1 - sum(r_prop_sizes_2)) / (nr_2 - 1)
+
+  #   #scaling_factor <- max_prop_size
+
+  #   c_prop_sizes_1 <- c_prop_sizes_1 / max_prop_size
+  #   c_prop_sizes_2 <- c_prop_sizes_2 / max_prop_size
+  #   c_space <- (1 - sum(c_prop_sizes)) / (nc - 1)
+  # } else if (scaling == "relative") {
+  #   #scaling_factor <- sum(c_prop_sizes_max)
+  #   c_prop_sizes_1 <- c_prop_sizes_1 / sum(c_prop_sizes_max)
+  #   c_prop_sizes_2 <- c_prop_sizes_2 / sum(c_prop_sizes_max)
+  # }
 
   # if (scaling == "relative") {
   # } else if (scaling == "absolute") {
@@ -376,26 +416,9 @@ plot2webs <- function(web1,
   r_xr_2 <- c(r_prop_sizes_2[1],
               r_prop_sizes_2[1] + cumsum(r_prop_sizes_2[-1] + r_space_2))
 
-
   # c_m_t_width <- 2 * max(strwidth(c_names))
   # r_m_t_width_1 <- 2 * max(strwidth(r_names_1))
   # r_m_t_width_2 <- 2 * max(strwidth(r_names_2))
-
-  c_m_t_width <- max(strwidth(c_names, units = "inches", cex = text_size))
-  r_m_t_width_1 <- max(strwidth(r_names_1, units = "inches", cex = text_size))
-  r_m_t_width_2 <- max(strwidth(r_names_2, units = "inches", cex = text_size))
-  #print(c_m_t_width)
-  #print(r_m_t_width_1)
-  #print(r_m_t_width_2)
-
-  if (horizontal) {
-    par(fig=c(0,0.5,0,1), mai = c(0.5, r_m_t_width_1 + 0.1, 0.5, c_m_t_width/2 + 0.1))
-  } else {
-    par(fig=c(0,1,0,0.5), mai = c(r_m_t_width_1 + 0.1, 0.5, c_m_t_width/2 + 0.1, 0.5))
-  }
-  plot(0, type = "n", ylim = c(0, 1), xlim = c(0, 1),
-       axes = plot_axes, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
-
 
   if (!is.null(add_higher_abundances)) {
     c_xl_1 <- rep(0, length(c_prop_sizes))
@@ -536,7 +559,7 @@ plot2webs <- function(web1,
   # plot(0, type = "n", ylim = c(0, 1), xlim = c(0, 1),
   #      axes = FALSE, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
 
-  if(horizontal) {
+  if (horizontal) {
     par(fig=c(0.5, 1, 0, 1), mai = c(0.5, c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1), new = TRUE)
   } else {
     par(fig=c(0, 1, 0.5, 1), mai = c(c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1, 0.5), new = TRUE)
