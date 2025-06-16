@@ -84,9 +84,9 @@ plot2webs <- function(web1,
   }
 
   if (sort_by == 1) {
-    web1 <- sortweb2(web1, sort.order = sorting)
+    web1 <- sortweb(web1, sort.order = sorting)
   } else if (sort_by == 2) {
-    web2 <- sortweb2(web2, sort.order = sorting)
+    web2 <- sortweb(web2, sort.order = sorting)
   }
 
   r_names_1 <- rownames(web1)
