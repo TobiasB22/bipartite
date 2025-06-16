@@ -39,8 +39,8 @@ For an overview of other computing resources, data, books, journals etc. check o
 \tabular{ll}{
 Package: \tab bipartite\cr
 Type: \tab Package\cr
-Version: \tab 2.21\cr
-Date: \tab 2024-05-10\cr
+Version: \tab 2.22\cr
+Date: \tab 2025-05-23\cr
 License: \tab GPL \cr
 }
 }
@@ -49,8 +49,16 @@ License: \tab GPL \cr
 Please see help page \code{\link{versionlog}} for all changes and updates prior to version 2.00. This page will only list most recent changes. 
 
 \itemize{
-  \item 2.21 (XX-XXX-2024)
+  \item 2.22 (23-May-2025)
   \describe{
+    \item{New implementation of \code{\link{plotweb}}}{For a more in depth demonstration of the new functionalities have a look at the new \code{PlottingWithBipartite} vignette.}
+    \item{Code changes to \code{\link{sortweb}}}{It now accepts "ca" as a sort.order}
+  }
+
+  \item 2.21 (20-Feb-2025)
+  \describe{
+    \item{Added new index "spectral radius"}{to \code{\link{networklevel}}, as well as its own function (\code{\link{spectral.radius}}). It is just another way to compute nestedness of sorts. This function was contributed by Tobias Bauer!}
+    \item{Updated (i.e. speed-improved) \code{\link{frame2webs}}}{to faster (or indeed at all) process all webs in a table. This code improvement was contributed by Tobias Bauer.}
     \item{Code changes to \code{\link{as.one.mode}}.}{Until version 2.21, projections to higher and lower level were based on reasoning what the correct weights should be from the perspective of an ecologist: If, say, species A and B interact with species a-z, then the link weight would be the sum of the minima of the two vectors A with a-z and B with a-z. In other words, the minimal overlap. In network science, the projection is defined differently, however, namely as the maximum! Thus, bringing \pkg{bipartite}'s \code{as.one.mode} closer to common mathematical practice, we now use the proper definition as default. The old definition remains available by setting \option{legacy=TRUE}. The new definition is: \eqn{AA^T}, with diagonal set to 0. (Taken from both Thurner et al.'s 2018 and Wikipedia's entry on the Laplacian matrix).}
   }
   
