@@ -18,10 +18,10 @@ plot2webs <- function(web1,
                       y_lim = c(0, 1),
                       lower_color = "black",
                       lower_border = "same",
-                      add_lower_color = "same",
+                      add_lower_color = "red",
                       higher_color = "black",
                       higher_border = "same",
-                      add_higher_color = "same",
+                      add_higher_color = "red",
                       higher_text_color = "black",
                       lower_text_color = "black",
                       horizontal = FALSE,
@@ -246,19 +246,40 @@ plot2webs <- function(web1,
     c_abuns_1 <- c(rbind(c_abuns_1, add_c_abundances_1))
     c_abuns_2 <- c(rbind(c_abuns_2, add_c_abundances_2))
 
-    if (add_higher_color == "same") {
-      higher_color <- rep(higher_color, each = 2)
-    } else if (!is.null(names(add_higher_color))) {
-      stopifnot(length(add_higher_color) == nc)
-      if (!setequal(names(add_higher_color), c_names)) {
-        stop("Names of add_higher_color does not match higher species names.")
+    if (length(add_higher_color) == 1) {
+      if (add_higher_color == "same") {
+        higher_color <- rep(higher_color, each = 2)
+      } else {
+        add_higher_color <- rep_len(add_higher_color, nc)
+        higher_color <- c(rbind(higher_color, add_higher_color))
       }
-      add_higher_color <- add_higher_color[colnames(web1)]
+    } else if (length(add_higher_color) == nc) {
+      if (setequal(names(add_higher_color), c_names)) {
+        add_higher_color <- add_higher_color[colnames(web1)]
+      }
       higher_color <- c(rbind(higher_color, add_higher_color))
-    } else if (length(add_higher_color) < nc) {
-      add_higher_color <- rep_len(higher_color, nc)
+    } else if (length(add_higher_color) > nc) {
+      add_higher_color <- rep_len(add_higher_color, nc)
+      higher_color <- c(rbind(higher_color, add_higher_color))
+    } else {
+      add_higher_color <- rep_len(add_higher_color, nc)
       higher_color <- c(rbind(higher_color, add_higher_color))
     }
+
+
+    # if (add_higher_color == "same") {
+    #   higher_color <- rep(higher_color, each = 2)
+    # } else if (!is.null(names(add_higher_color))) {
+    #   stopifnot(length(add_higher_color) == nc)
+    #   if (!setequal(names(add_higher_color), c_names)) {
+    #     stop("Names of add_higher_color does not match higher species names.")
+    #   }
+    #   add_higher_color <- add_higher_color[colnames(web1)]
+    #   higher_color <- c(rbind(higher_color, add_higher_color))
+    # } else if (length(add_higher_color) < nc) {
+    #   add_higher_color <- rep_len(higher_color, nc)
+    #   higher_color <- c(rbind(higher_color, add_higher_color))
+    # }
   }
 
   ################ PLOT 1 (LEFT / LOWER) ###################################
