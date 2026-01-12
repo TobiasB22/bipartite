@@ -41,45 +41,45 @@ draw_link <- function(x1, x2, y1, y2, y3, y4, col,
   }
 }
 
-plotweb_v2 <- function(web,
-                       sorting = "normal",
-                       empty = FALSE,
-                       higher_abundances = NULL,
-                       lower_abundances = NULL,
-                       add_higher_abundances = NULL,
-                       add_lower_abundances = NULL,
-                       higher_labels = NULL,
-                       lower_labels = NULL,
-                       scaling = "relative",
-                       font = NULL,
-                       family = NULL,
-                       srt = 0,
-                       higher_italic = FALSE,
-                       lower_italic = FALSE,
-                       text_size = "auto",
-                       spacing = 0.3,
-                       box_size = 0.1,
-                       x_lim = c(0, 1),
-                       y_lim = c(0, 1),
-                       lab_distance = 0.05,
-                       lower_color = "black",
-                       lower_border = "same",
-                       lower_add_color = "red",
-                       lower_text_color = "black",
-                       higher_color = "black",
-                       higher_border = "same",
-                       higher_add_color = "red",
-                       higher_text_color = "black",
-                       horizontal = FALSE,
-                       link_color = "higher",
-                       link_border = "same",
-                       link_alpha = 0.5,
-                       curved_links = FALSE,
-                       arrow = "no",
-                       plot_axes = FALSE,
-                       add = FALSE,
-                       mar = c(1, 1, 1, 1),
-                       mai = NULL) {
+plotweb <- function(web,
+                    sorting = "normal",
+                    empty = FALSE,
+                    higher_abundances = NULL,
+                    lower_abundances = NULL,
+                    add_higher_abundances = NULL,
+                    add_lower_abundances = NULL,
+                    higher_labels = NULL,
+                    lower_labels = NULL,
+                    scaling = "relative",
+                    font = NULL,
+                    family = NULL,
+                    srt = 0,
+                    higher_italic = FALSE,
+                    lower_italic = FALSE,
+                    text_size = "auto",
+                    spacing = 0.3,
+                    box_size = 0.1,
+                    x_lim = c(0, 1),
+                    y_lim = c(0, 1),
+                    lab_distance = 0.05,
+                    lower_color = "black",
+                    lower_border = "same",
+                    lower_add_color = "red",
+                    lower_text_color = "black",
+                    higher_color = "black",
+                    higher_border = "same",
+                    higher_add_color = "red",
+                    higher_text_color = "black",
+                    horizontal = FALSE,
+                    link_color = "higher",
+                    link_border = "same",
+                    link_alpha = 0.5,
+                    curved_links = FALSE,
+                    arrow = "no",
+                    plot_axes = FALSE,
+                    add = FALSE,
+                    mar = c(1, 1, 1, 1),
+                    mai = NULL) {
   # Set the figure border via the mai or mar argument
   if (!is.null(mar) & !is.null(mai)) {
     warning("Both mar and mai have been set to values other than NULL. ",
@@ -105,6 +105,25 @@ plotweb_v2 <- function(web,
   }
   # Extract newly set margin in inches
   mai <- par()$mai
+
+  # link_color was given as an unnamed matrix
+  # rownames and colnames need to be set
+  if (is.matrix(link_color)) {
+    if (is.null(rownames(link_color))) {
+      rownames(link_color) <- rownames(web)
+    }
+    if (is.null(colnames(link_color))) {
+      colnames(link_color) <- colnames(web)
+    }
+  } else if (is.vector(link_color) && length(link_color) == nrow(web) * ncol(web)) {
+    # link_color was given as a unnamed vector
+    # and needs to be converted to a named matrix
+    link_color <- matrix(link_color,
+                         nrow = nrow(web),
+                         ncol = ncol(web))
+    rownames(link_color) <- rownames(web)
+    colnames(link_color) <- colnames(web)
+  }
 
   # Sort the web according to the user defined method
   web <- sortweb(web, sort.order = sorting, empty = empty)
@@ -132,6 +151,11 @@ plotweb_v2 <- function(web,
     r_names <- rev(r_names)
     c_names <- rev(c_names)
     web <- web[r_names, c_names]
+  }
+
+  # link_color needs to be sorted accordingly
+  if (is.matrix(link_color)) {
+    link_color <- link_color[r_names, c_names]
   }
 
   # Extract the higher and lower label texts
@@ -670,7 +694,9 @@ plotweb_v2 <- function(web,
     y2 <- link$xcoord.bl
     y3 <- link$xcoord.tr
     y4 <- link$xcoord.br
-    if (link_color == "lower") {
+    if (length(dim(link_color)) == 2) { # Color is defined for each link
+      l_col <- link_color[link$row, link$col]
+    } else if (link_color == "lower") {
       l_col <- lower_color[link$row]
     } else if (link_color == "higher") {
       l_col <- higher_color[link$col]
@@ -687,5 +713,3 @@ plotweb_v2 <- function(web,
   ## TODO: Implement legend plotting
 }
 
-# Define plotweb to be the new version plotweb_v2 by default
-plotweb <- plotweb_v2
