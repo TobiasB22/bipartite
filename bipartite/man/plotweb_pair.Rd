@@ -1,13 +1,13 @@
 \encoding{UTF-8}
-\name{plot2webs}
-\alias{plot2webs}
+\name{plotweb_pair}
+\alias{plotweb_pair}
 
 \title{Visualize two bipartite interaction matrices (e.g. foodwebs at two locations)}
 \description{
 Two 2-D matrices are plotted as a two-layer bipartite graph.  
 }
 \usage{
-plot2webs <- function(web1,
+plotweb_pair <- function(web1,
                       web2,
                       middle = "higher",
                       sort_by = 1,

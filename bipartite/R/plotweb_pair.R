@@ -1,42 +1,42 @@
-plot2webs <- function(web1,
-                      web2,
-                      middle = "higher",
-                      sort_by = 1,
-                      sorting = "normal",
-                      higher_abundances = NULL,
-                      lower_abundances = NULL,
-                      add_higher_abundances = NULL,
-                      add_lower_abundances = NULL,
-                      scaling = "absolute",
-                      font = NULL,
-                      family = NULL,
-                      srt = 0,
-                      higher_italic = FALSE,
-                      lower_italic = FALSE,
-                      text_size = 1,
-                      x_lim = c(0, 1),
-                      y_lim = c(0, 1),
-                      lower_color = "black",
-                      lower_border = "same",
-                      add_lower_color = "red",
-                      higher_color = "black",
-                      higher_border = "same",
-                      add_higher_color = "red",
-                      higher_text_color = "black",
-                      lower_text_color = "black",
-                      horizontal = FALSE,
-                      abbr_names = FALSE,
-                      link_color = "lower",
-                      link_border = "same",
-                      link_alpha = 0.6,
-                      curved_links = FALSE,
-                      arrow = "no",
-                      spacing = "auto",
-                      # space_lower = 0.2,
-                      # space_higher = 0.2,
-                      mar = c(1, 1, 1, 1),
-                      mai = NULL,
-                      plot_axes = FALSE) {
+plotweb_pair <- function(web1,
+                         web2,
+                         middle = "higher",
+                         sort_by = 1,
+                         sorting = "normal",
+                         higher_abundances = NULL,
+                         lower_abundances = NULL,
+                         add_higher_abundances = NULL,
+                         add_lower_abundances = NULL,
+                         scaling = "absolute",
+                         font = NULL,
+                         family = NULL,
+                         srt = 0,
+                         higher_italic = FALSE,
+                         lower_italic = FALSE,
+                         text_size = 1,
+                         x_lim = c(0, 1),
+                         y_lim = c(0, 1),
+                         lower_color = "black",
+                         lower_border = "same",
+                         add_lower_color = "red",
+                         higher_color = "black",
+                         higher_border = "same",
+                         add_higher_color = "red",
+                         higher_text_color = "black",
+                         lower_text_color = "black",
+                         horizontal = FALSE,
+                         abbr_names = FALSE,
+                         link_color = "lower",
+                         link_border = "same",
+                         link_alpha = 0.6,
+                         curved_links = FALSE,
+                         arrow = "no",
+                         spacing = "auto",
+                         # space_lower = 0.2,
+                         # space_higher = 0.2,
+                         mar = c(1, 1, 1, 1),
+                         mai = NULL,
+                         plot_axes = FALSE) {
 
 
   # Copy original par options
@@ -97,6 +97,17 @@ plot2webs <- function(web1,
   c_names_1 <- colnames(web1)
   c_names_2 <- colnames(web2)
 
+  # Reverse the webs in horizontal mode,
+  # so that the first species are plotted at the top
+  if (horizontal) {
+    c_names_1 <- rev(c_names_1)
+    r_names_1 <- rev(r_names_1)
+    c_names_2 <- rev(c_names_2)
+    r_names_2 <- rev(r_names_2)
+    web1 <- web1[r_names_1, c_names_1]
+    web2 <- web2[r_names_2, c_names_2]
+  }
+
   if (sort_by == 1) {
     c_names <- union(c_names_1, c_names_2)
     r_names <- union(r_names_1, r_names_2)
@@ -125,6 +136,7 @@ plot2webs <- function(web1,
     web1 <- web1[intersect(r_names, r_names_1), colnames(web2)]
     r_names_1 <- rownames(web1)
   }
+
 
   nc <- length(c_names)
   nr <- length(union(r_names_1, r_names_2))
