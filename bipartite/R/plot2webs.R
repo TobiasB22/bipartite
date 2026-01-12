@@ -39,6 +39,9 @@ plot2webs <- function(web1,
                       plot_axes = FALSE) {
 
 
+  # Copy original par options
+  op <- par(no.readonly = TRUE)
+
   # By default the the higher species (columns)
   # are plotted in the middle. So to enable plotting the lower
   # species (rows) in the middle a trick is used. That is,
@@ -646,4 +649,7 @@ plot2webs <- function(web1,
               l_col, horizontal = horizontal,
               curved = curved_links)
   }
+
+  # Reset original par options
+  par(op)
 }
