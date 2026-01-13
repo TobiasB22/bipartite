@@ -4,7 +4,7 @@
 
 \title{Visualize two bipartite interaction matrices (e.g. foodwebs at two locations)}
 \description{
-Two 2-D (interaction) matrices are plotted as a two-layer bipartite graph.
+This function plots two bipartite interaction matrices (such as food webs at different locations or time points) as a two-layer bipartite graph. It helps compare the two webs visually by placing them in a single plot.
 }
 \usage{
 plotweb_pair(web1,
@@ -46,28 +46,30 @@ plotweb_pair(web1,
 }
 
 \arguments{
-  \item{web1}{The (interaction) matrix, that is plotted on top (on the left).}
-  \item{web2}{The second layer (e.g. temporal or spatial) web. Common species between the webs must have the exact same name.}
-  \item{middle}{\code{"higher"} or \code{"lower"}. 
-                Defining which trophic level should be plotted in the middle of the graph.}
-  \item{sort_by}{\code{1} or \code{2} to sort the species based on their 
-                 order in \code{web1} or \code{web2} respectively.}
+  \item{web1}{Interaction matrix for the first web (placed on top or on the left).}
+  \item{web2}{Interaction matrix for the second web (placed below or on the right).
+              For species shared between webs, names must match exactly.}
+  \item{middle}{Position of the trophic levels:
+    \code{"higher"}—higher trophic level (columns) in the middle,
+    \code{"lower"}—lower trophic level (rows) in the middle.}
+  \item{sort_by}{Choose whether to sort species based on 
+                 \code{web1} (\code{= 1}) or \code{web2} (\code{= 2}).}
   \item{sorting}{Sorting option passed to the \code{\link{sortweb}} function. 
                  Applies only to web specified with \code{sort_by}. 
                  The default \code{"normal"} doesn't reorder the web.}
-  \item{higher_abundances}{List containing 2 vectors with independent abundance estimates
-                           for the higher trophic level of both webs.
+  \item{higher_abundances}{List of two vectors with abundance data
+                           for the higher trophic level in [web1, web2].
                            \code{NULL} if none exist}
-  \item{higher_abundances}{List containing 2 vectors with independent abundance estimates
-                           for the lower trophic level of both webs.
+  \item{higher_abundances}{List of two vectors with abundance data
+                           for the lower trophic level in [web1, web2].
                            \code{NULL} if none exist}
-  \item{add_higher_abundances}{List containing 2 vectors with 
-                               additional abundance (e.g. unparasitised hosts)
-                               for the higher trophic level of both webs.
+  \item{add_higher_abundances}{List of two vectors with
+                               additional abundance (e.g. unparasitised hosts) data
+                               for the higher trophic level in [web1, web2].
                                \code{NULL} if none exist}
-  \item{add_lower_abundances}{List containing 2 vectors with 
-                              additional abundance (e.g. unparasitised hosts)
-                              for the lower trophic level of both webs.
+  \item{add_lower_abundances}{List of two vectors with 
+                              additional abundance (e.g. unparasitised hosts) data
+                              for the lower trophic level in [web1, web2].
                               \code{NULL} if none exist}
   \item{scaling}{\code{"absoulte"} scales the boxes and links in 
                  relation to the most abundant species. 
@@ -127,7 +129,8 @@ plotweb_pair(web1,
       \item \code{"both.center"}
     }
   }
-  \item{spacing}{}
+  \item{spacing}{Either numeric giving the summed space between boxes 
+                 or \code{"auto"} for automatic spacing.}
   \item{mar}{A numerical vector of the form \code{c(bottom, left, top, right)} 
              which gives the number of lines of margin to be specified 
              on the four sides of the plot. 
@@ -141,11 +144,15 @@ plotweb_pair(web1,
 }
 
 \value{
-  Returns a window with the two bipartite graphs aligned on top or next to each other.
+This function opens a plot window with the two bipartite graphs, aligned either side-by-side or vertically, for easy comparison.
 }
 
 \note{
+For plotting the abundance data, supply a list with exactly two vectors for \code{higher_abundances}, \code{lower_abundances}, \code{add_higher_abundances}, and \code{add_lower_abundances}. Each list element should correspond to one web (e.g., \code{list(c(...), c(...))}).
+
+Sometimes the labels aren't placed correcly when first calling the function. Calling the function a second time while the plot windows is open should fix this issue.
 }
+
 
 \author{ Tobias Bauer \email{tobias.bauer-2@uni-hamburg.de} }
 
@@ -155,7 +162,8 @@ plotweb_pair(web1,
   For plotting a single web see \code{\link{plotweb}}.
 }
 \examples{
-plotweb_pair(Safariland, vazarr, horizontal = TRUE)
+  # Example: Plot two webs side-by-side horizontally
+  plotweb_pair(Safariland, vazarr, horizontal = TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

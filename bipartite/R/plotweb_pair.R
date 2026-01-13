@@ -42,6 +42,25 @@ plotweb_pair <- function(web1,
   # Copy original par options
   op <- par(no.readonly = TRUE)
 
+  # Check whether the webs have named rows and columns
+  # and if not fill them in.
+  if (is.null(rownames(web1))) {
+    warning("Filled in missing row names of web1.")
+    rownames(web1) <- rownames(web1, do.NULL = FALSE)
+  }
+  if (is.null(rownames(web2))) {
+    warning("Filled in missing row names of web2.")
+    rownames(web2) <- rownames(web2, do.NULL = FALSE)
+  }
+  if (is.null(colnames(web1))) {
+    warning("Filled in missing column names of web1.")
+    colnames(web1) <- colnames(web1, do.NULL = FALSE)
+  }
+  if (is.null(colnames(web2))) {
+    warning("Filled in missing column names of web2.")
+    colnames(web2) <- colnames(web2, do.NULL = FALSE)
+  }
+
   # By default the the higher species (columns)
   # are plotted in the middle. So to enable plotting the lower
   # species (rows) in the middle a trick is used. That is,
@@ -86,11 +105,14 @@ plotweb_pair <- function(web1,
 
   }
 
+  ################ SORTING ###################################
   if (sort_by == 1) {
     web1 <- sortweb(web1, sort.order = sorting)
   } else if (sort_by == 2) {
     web2 <- sortweb(web2, sort.order = sorting)
   }
+
+  ################ NAMING ###################################
 
   r_names_1 <- rownames(web1)
   r_names_2 <- rownames(web2)
@@ -129,6 +151,9 @@ plotweb_pair <- function(web1,
                      ncol = length(c_diff_2), dimnames = list(c(), c_diff_2))
   web2 <- cbind(web2, c_fill_2)
 
+  ################ REORDERING ###################################
+
+  # Reorder the other web based on the sorted web.
   if (sort_by == 1) {
     web2 <- web2[intersect(r_names, r_names_2), colnames(web1)]
     r_names_2 <- rownames(web2)
@@ -137,11 +162,12 @@ plotweb_pair <- function(web1,
     r_names_1 <- rownames(web1)
   }
 
-
   nc <- length(c_names)
   nr <- length(union(r_names_1, r_names_2))
   nc_1 <- ncol(web1)
   nc_2 <- ncol(web2)
+
+  ################ REORDER COLOR VECTORS ###################################
 
   # Recycle the color vectors
   if (!is.null(names(higher_color))) {
@@ -164,7 +190,6 @@ plotweb_pair <- function(web1,
       # TODO: fix bug when middle = "lower"
       stop("Names of lower_color does not match names of lower species.")
     }
-    #higher_color <- higher_color[colnames(web1)]
     lower_color_1 <- lower_color[r_names_1]
     lower_color_2 <- lower_color[r_names_2]
   } else if (length(lower_color) < nr) {
@@ -184,6 +209,8 @@ plotweb_pair <- function(web1,
   #     c_sums_2[i] <- sum(web2[, c_name])
   #   }
   # }
+
+  ################ ABUNDANCES / RECT SIZES ###################################
 
   c_abuns_1 <- colSums(web1)
   c_abuns_2 <- colSums(web2)
@@ -210,7 +237,7 @@ plotweb_pair <- function(web1,
           # according to the column-order in the web
           add_c_abundances_1 <- add_c_abundances_1[c_names]
         }
-      } else if (length(add_c_abun_names_1) == nc_1 &
+      } else if (length(add_c_abun_names_1) == nc_1 &&
                  setequal(add_c_abun_names_1, c_names_1)) {
         missing_names <- setdiff(c_names, add_c_abun_names_1)
         missing_values <- rep(0, nc - nc_1)
@@ -244,7 +271,7 @@ plotweb_pair <- function(web1,
           # according to the column-order in the web
           add_c_abundances_2 <- add_c_abundances_2[colnames(web1)]
         }
-      } else if (length(add_c_abun_names_2) == nc_2 &
+      } else if (length(add_c_abun_names_2) == nc_2 &&
                   setequal(add_c_abun_names_2, c_names_2)) {
         # If the additional abundances only have the names
         # of the second web, fill up the missing values.
@@ -300,7 +327,7 @@ plotweb_pair <- function(web1,
 
   }
 
-  ################ PLOT 1 (LEFT / LOWER) ###################################
+  ################ PLOT 1 (LEFT / HIGHER) ###################################
 
   c_m_t_width <- max(strwidth(c_names, units = "inches", cex = text_size))
   r_m_t_width_1 <- max(strwidth(r_names_1, units = "inches", cex = text_size))
@@ -338,12 +365,15 @@ plotweb_pair <- function(web1,
     r_abuns_2 <- c(rbind(r_abuns_2, add_r_abundances_2))
     # TODO: fix bug with new lower_color_1 and lower_color_2
     if (add_lower_color == "same") {
-      lower_color <- rep(lower_color, each = 2)
+      lower_color_1 <- rep(lower_color_1, each = 2)
+      lower_color_2 <- rep(lower_color_2, each = 2)
     } else if (!is.null(names(add_lower_color))) {
       stopifnot(length(add_lower_color) == nr)
-      lower_color <- c(rbind(lower_color, add_lower_color))
+      lower_color_1 <- c(rbind(lower_color_1, add_lower_color))
+      lower_color_2 <- c(rbind(lower_color_2, add_lower_color))
     } else {
-      lower_color <- c(rbind(lower_color, add_lower_color))
+      lower_color_1 <- c(rbind(lower_color_1, add_lower_color))
+      lower_color_2 <- c(rbind(lower_color_2, add_lower_color))
     }
   }
 
@@ -504,7 +534,7 @@ plotweb_pair <- function(web1,
   }
   # text(1, c_tx, c_names, adj = c(0, 0.5), xpd=NA)
 
-  # # Interactions
+  ## Interactions
   # web.df_1 <- data.frame(row = rep(1:nr_1, nc), col = rep(1:nc, each = nr_1), weight = c(web1))
   # web.df_1 <- data.frame(row = rep(1:nr_1, nc_1), col = rep(which(c_names %in% c_names_1), each = nr_1), weight = c(web1))
   web.df_1 <- data.frame(row = rep(1:nr_1, nc),
@@ -527,7 +557,7 @@ plotweb_pair <- function(web1,
   # x-coordinates of interactions: tl=topleft, etc
   web.df_1[, c("xcoord.tl", "xcoord.tr", "xcoord.br", "xcoord.bl")] <- NA 
 
-  # # low coordinates for interactions (in order of the web.df)
+  ## low coordinates for interactions (in order of the web.df)
   for (i in unique(web.df_1$row)) { # for i in lower species
     links.i <- web.df_1[web.df_1$row == i, ]
     relpos <- cumsum(links.i$weight) / sum(links.i$weight)
@@ -536,7 +566,7 @@ plotweb_pair <- function(web1,
     web.df_1[web.df_1$row == i, "xcoord.br"] <- c(coords.int.low)
   }
 
-  # # high coordinates for interactions (in order of the web.df)
+  ## high coordinates for interactions (in order of the web.df)
   for (j in unique(web.df_1$col)) { # for j in higher species
     links.j <- web.df_1[web.df_1$col == j, ]
     relpos <- cumsum(links.j$weight) / sum(links.j$weight)
@@ -567,6 +597,8 @@ plotweb_pair <- function(web1,
   # par(fig=c(0.5, 0.5, 0, 1), mai = c(0, c_m_t_width/2, 0, c_m_t_width/2), new = TRUE)
   # plot(0, type = "n", ylim = c(0, 1), xlim = c(0, 1),
   #      axes = FALSE, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
+
+  ################ PLOT 2 (RIGHT / LOWER) ###################################
 
   if (horizontal) {
     par(fig=c(0.5, 1, 0, 1), mai = c(0.5, c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1), new = TRUE)
