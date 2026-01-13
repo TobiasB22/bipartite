@@ -69,7 +69,7 @@ plotweb_pair <- function(web1,
     web1 <- t(web1)
     web2 <- t(web2)
     # swap independent abundances
-    tmp <- higher_abundances 
+    tmp <- higher_abundances
     higher_abundances <- lower_abundances
     lower_abundances <- tmp
     # swap additional abundances
@@ -364,13 +364,22 @@ plotweb_pair <- function(web1,
     r_abuns_1 <- c(rbind(r_abuns_1, add_r_abundances_1))
     r_abuns_2 <- c(rbind(r_abuns_2, add_r_abundances_2))
     # TODO: fix bug with new lower_color_1 and lower_color_2
-    if (add_lower_color == "same") {
-      lower_color_1 <- rep(lower_color_1, each = 2)
-      lower_color_2 <- rep(lower_color_2, each = 2)
+    if (length(add_lower_color) == 1) {
+      if (add_lower_color == "same") {
+        lower_color_1 <- rep(lower_color_1, each = 2)
+        lower_color_2 <- rep(lower_color_2, each = 2)
+      } else {
+        add_lower_color_1 <- rep_len(add_lower_color, nr_1)
+        lower_color_1 <- c(rbind(lower_color_1, add_lower_color_1))
+        add_lower_color_2 <- rep_len(add_lower_color, nr_2)
+        lower_color_2 <- c(rbind(lower_color_2, add_lower_color_2))
+      }
     } else if (!is.null(names(add_lower_color))) {
       stopifnot(length(add_lower_color) == nr)
-      lower_color_1 <- c(rbind(lower_color_1, add_lower_color))
-      lower_color_2 <- c(rbind(lower_color_2, add_lower_color))
+      add_lower_color_1 <- add_lower_color[r_names_1]
+      lower_color_1 <- c(rbind(lower_color_1, add_lower_color_1))
+      add_lower_color_2 <- add_lower_color[r_names_2]
+      lower_color_2 <- c(rbind(lower_color_2, add_lower_color_2))
     } else {
       lower_color_1 <- c(rbind(lower_color_1, add_lower_color))
       lower_color_2 <- c(rbind(lower_color_2, add_lower_color))
