@@ -86,6 +86,10 @@ plotweb <- function(web,
             "This leads to mai overriding mar.")
   }
 
+  if (!is.matrix(web)) {
+    stop("The argument web must be a matrix.")
+  }
+
   stopifnot(is.logical(higher_italic),
             is.logical(lower_italic),
             is.logical(horizontal),
@@ -712,4 +716,3 @@ plotweb <- function(web,
 
   ## TODO: Implement legend plotting
 }
-
