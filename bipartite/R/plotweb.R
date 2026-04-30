@@ -104,7 +104,7 @@ plotweb <- function(web,
 
   # Update the user defined margin in either rows or inches
   if (!is.null(mar)) {
-    if (!is.null(main)) {
+    if (!is.null(title)) {
       mar <- mar + c(0, 0, 1, 0)
     }
     par(mar = mar)
