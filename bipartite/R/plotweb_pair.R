@@ -13,7 +13,7 @@ plotweb_pair <- function(web1,
                          srt = 0,
                          higher_italic = FALSE,
                          lower_italic = FALSE,
-                         text_size = 1,
+                         text_size = "auto",
                          x_lim = c(0, 1),
                          y_lim = c(0, 1),
                          lower_color = "black",
@@ -31,7 +31,7 @@ plotweb_pair <- function(web1,
                          link_alpha = 0.6,
                          curved_links = FALSE,
                          arrow = "no",
-                         spacing = "auto",
+                         spacing = 0.3,
                          # space_lower = 0.2,
                          # space_higher = 0.2,
                          mar = c(1, 1, 1, 1),
@@ -329,6 +329,9 @@ plotweb_pair <- function(web1,
 
   ################ PLOT 1 (LEFT / HIGHER) ###################################
 
+  # Get the maximum width values of the inner and outer labels in inches.
+  # These are used to calculate the required margins of the plots.
+  # TODO: Actually use the width and height after applying label rotation (srt).
   c_m_t_width <- max(strwidth(c_names, units = "inches", cex = text_size))
   r_m_t_width_1 <- max(strwidth(r_names_1, units = "inches", cex = text_size))
   r_m_t_width_2 <- max(strwidth(r_names_2, units = "inches", cex = text_size))
@@ -341,11 +344,84 @@ plotweb_pair <- function(web1,
     par(fig = c(0, 1, 0, 0.5),
         mai = c(r_m_t_width_1 + 0.1, 0.5, c_m_t_width/2 + 0.1, 0.5))
   }
+  # TODO: use xlim and ylim arguments here.
   plot(0, type = "n", ylim = c(0, 1), xlim = c(0, 1),
        axes = plot_axes, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
 
-  r_abuns_1 <- rowSums(web1)
-  r_abuns_2 <- rowSums(web2)
+  ################# auto spacing ###################################
+  if (spacing == "auto" && text_size == "auto") {
+    stop("Both spacing and text_size were set to \"auto\".")
+  }
+
+  if (spacing == "auto") {
+    c_str_height <- sum(strheight(c_names, cex = text_size))
+    r_str_height_1 <- sum(strheight(r_names_1, cex = text_size))
+    r_str_height_2 <- sum(strheight(r_names_2, cex = text_size))
+
+    max_str_height <- max(c_str_height, r_str_height_1, r_str_height_2)
+    if (max_str_height >= 0.95) {
+      dev.off()
+      stop("Text size of labels is too large for auto scaling.")
+    }
+    space_higher <- 1.05 * max_str_height
+    space_lower <- 1.05 * max_str_height
+  } else {
+    space_higher <- spacing
+    space_lower <- spacing
+  }
+
+  ################# auto text_size ###################################
+  ## TODO: Implement label rotation and add the angles here.
+  if (text_size == "auto") {
+    # Get the size of the plotting device in inches
+    dev_size <- dev.size("in")
+
+    c_height_1 <- strwidth(c_names[1], units = "inches")
+    c_height_1 <- cos(theta_pi) * c_height_1
+    r_height_1 <- strwidth(lower_labels[1], units = "inches")
+    r_height_1 <- cos(theta_pi) * r_height_1
+
+    c_height_n <- strwidth(higher_labels[nc], units = "inches")
+    c_height_n <- cos(theta_pi) * c_height_n
+    r_height_n <- strwidth(lower_labels[nr], units = "inches")
+    r_height_n <- cos(theta_pi) * r_height_n
+
+    max_height_1 <- max(c_height_1, -r_height_1)
+    max_height_n <- max(-c_height_n, r_height_n)
+    # Substract the margings from the total device size
+    # to get the actual plotting area.
+    dev_width <- dev_size[1] - mai[2] - mai[4] - max_height_1 - max_height_n
+    dev_height <- dev_size[2] - mai[1] - mai[3] - max_height_1 - max_height_n
+    if (horizontal) {
+      dev_max <- spacing * dev_height
+    } else {
+      dev_max <- spacing * dev_width
+    }
+    a <- theta_pi - pi / 2
+    # TODO: Trust the math
+    min_distance_at_angle <- tan(a)^2 * abs(cos(a)) + abs(cos(a))
+    # if (theta < 45 || theta > 315 || (theta > 135 && theta < 225)) {
+    if (min_distance_at_angle > max(nchar(c(higher_labels, lower_labels)))) {
+      sum_str_h <- sum(strwidth(higher_labels, units = "inches"))
+      sum_str_l <- sum(strwidth(lower_labels, units = "inches"))
+    } else {
+      sum_str_h <- 1.25 * min_distance_at_angle * sum(strheight(higher_labels, units = "inches"))
+      sum_str_l <- 1.25 * min_distance_at_angle * sum(strheight(lower_labels, units = "inches"))
+    }
+    if (sum_str_h > dev_max || sum_str_l > dev_max) {
+      text_size <- min(dev_max / sum_str_h, dev_max / sum_str_l)
+    } else {
+      text_size <- 1
+    }
+  }
+
+  ################# Calculate the box sizes ###################################
+
+  # If no lower abundances were given, approx them with the rowSums.
+  if (is.null(lower_abundances)) {
+    r_abuns_1 <- rowSums(web1)
+    r_abuns_2 <- rowSums(web2)
+  }
   if (!is.null(lower_abundances)) {
     r_abuns_1 <- lower_abundances[[1]]
     r_abuns_2 <- lower_abundances[[2]]
@@ -359,10 +435,12 @@ plotweb_pair <- function(web1,
     add_r_abundances_1[is.na(add_r_abundances_1)] <- 0
     add_r_abundances_2[is.na(add_r_abundances_2)] <- 0
     # Merge the abundances and additional abundances vector
-    # by alternating indices
-    #lower_abundances <- c(rbind(lower_abundances, add_lower_abundances))
+    # by alternating indices.
     r_abuns_1 <- c(rbind(r_abuns_1, add_r_abundances_1))
     r_abuns_2 <- c(rbind(r_abuns_2, add_r_abundances_2))
+
+    # Increase the color vectors by inserting the colors for
+    # additional abundances at the right indices.
     # TODO: fix bug with new lower_color_1 and lower_color_2
     if (length(add_lower_color) == 1) {
       if (add_lower_color == "same") {
@@ -386,30 +464,23 @@ plotweb_pair <- function(web1,
     }
   }
 
+  # Scale the size of the inner boxes based on the selected method.
+  # Relative scaling scales by the sum of abundances for each web independently.
+  # So that the sum of the scaled abundances of both webs is equal to 1.
   if (scaling == "relative") {
     c_prop_sizes_1 <- c_abuns_1 / sum(c_abuns_1)
     c_prop_sizes_2 <- c_abuns_2 / sum(c_abuns_2)
   } else if (scaling == "absolute") {
+    # In absolute scaling abundances of both webs
+    # are scaled by the same factor (total_abuns).
     total_abuns <- sum(c(c_abuns_1, c_abuns_2, r_abuns_1, r_abuns_2))
     c_prop_sizes_1 <- c_abuns_1 / total_abuns
     c_prop_sizes_2 <- c_abuns_2 / total_abuns
   }
 
-  if (spacing == "auto") {
-    c_str_height <- sum(strheight(c_names, cex = text_size))
-    r_str_height_1 <- sum(strheight(r_names_1, cex = text_size))
-    r_str_height_2 <- sum(strheight(r_names_2, cex = text_size))
-
-    max_str_height <- max(c_str_height, r_str_height_1, r_str_height_2)
-    space_higher <- 1.05 * max_str_height
-    space_lower <- 1.05 * max_str_height
-  } else {
-    space_higher <- spacing
-    space_lower <- spacing
-  }
-
   if (!is.null(add_higher_abundances)) {
     # Take the sum of two consecutive elements in c_prop_sizes_
+    # since the additional abundances are included in there as elements.
     c_paired_sizes_1 <- colSums(matrix(c_prop_sizes_1, nrow = 2))
     c_paired_sizes_2 <- colSums(matrix(c_prop_sizes_2, nrow = 2))
     c_prop_sizes_max <- pmax(c_paired_sizes_1, c_paired_sizes_2)
@@ -417,18 +488,20 @@ plotweb_pair <- function(web1,
     c_prop_sizes_max <- pmax(c_prop_sizes_1, c_prop_sizes_2)
   }
 
+  # Scale down the rectangle sizes further to leave space in between.
   c_prop_sizes_1 <- (1 - space_higher) * c_prop_sizes_1
   c_prop_sizes_2 <- (1 - space_higher) * c_prop_sizes_2
 
-  # Adjust the lower space so that it matches the necessary higher space
+  # Scale the outer rectangles based on the chosen method as well.
   if (scaling == "relative") {
+    # Adjust the lower space so that it matches the necessary higher space
     space_lower <- 1 - ((1 - space_higher) / sum(c_prop_sizes_max))
     r_prop_sizes_1 <- (1 - space_lower) * r_abuns_1 / sum(r_abuns_1)
     r_prop_sizes_2 <- (1 - space_lower) * r_abuns_2 / sum(r_abuns_2)
     r_space_1 <- space_lower / (nr_1 - 1)
     r_space_2 <- space_lower / (nr_2 - 1)
   } else if (scaling == "absolute") {
-    r_prop_sizes_1 <- r_abuns_1 / total_abuns# / sum(c_prop_sizes_max)
+    r_prop_sizes_1 <- r_abuns_1 / total_abuns
     r_prop_sizes_2 <- r_abuns_2 / total_abuns# / sum(c_prop_sizes_max)
   }
 
@@ -437,6 +510,7 @@ plotweb_pair <- function(web1,
                        sum(r_prop_sizes_2))
   c_prop_sizes <- (1 - space_higher) * c_prop_sizes_max / max_prop_size
 
+  # Devide the total space between the inner rectangles.
   c_space <- space_higher / (nc - 1)
 
   if (scaling == "absolute") {
@@ -454,6 +528,8 @@ plotweb_pair <- function(web1,
     c_prop_sizes_2 <- c_prop_sizes_2 / sum(c_prop_sizes_max)
   }
 
+  # When additional abundances are given fill up the space vector with zeros,
+  # so that the additional rectangles are plotted bordering the main ones.
   if (!is.null(add_lower_abundances)) {
     r_space_1 <- c(0, r_space_1)
     r_space_2 <- c(0, r_space_2)
@@ -521,7 +597,6 @@ plotweb_pair <- function(web1,
     r_names_1 <- lapply(r_names_1, function(x) bquote(italic(.(x))))
     r_names_1 <- as.expression(r_names_1)
   }
-
   if (horizontal) {
     rect(0, r_xl_1, 0.1, r_xr_1, col = lower_color_1, border = lower_border_1)
     rect(0.9, c_xl_1, 1, c_xr_1, col = higher_color, border = higher_border)
@@ -609,10 +684,15 @@ plotweb_pair <- function(web1,
 
   ################ PLOT 2 (RIGHT / LOWER) ###################################
 
+  # Redefine the figure region for plotting the second web.
   if (horizontal) {
-    par(fig=c(0.5, 1, 0, 1), mai = c(0.5, c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1), new = TRUE)
+    par(fig = c(0.5, 1, 0, 1),
+        mai = c(0.5, c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1),
+        new = TRUE)
   } else {
-    par(fig=c(0, 1, 0.5, 1), mai = c(c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1, 0.5), new = TRUE)
+    par(fig = c(0, 1, 0.5, 1),
+        mai = c(c_m_t_width / 2 + 0.1, 0.5, r_m_t_width_2 + 0.1, 0.5),
+        new = TRUE)
   }
   plot(0, type = "n", ylim = c(0, 1), xlim = c(0, 1),
        axes = plot_axes, xlab = "", ylab = "", xaxs = "i", yaxs = "i")
@@ -662,11 +742,11 @@ plotweb_pair <- function(web1,
                            weight = c(web2))
   }
   web.df_2 <- web.df_2[web.df_2$weight > 0, ]
-  web.df_2[, c("xcoord.tl", "xcoord.tr", "xcoord.br", "xcoord.bl")] <- NA # x-coordinates of interactions: tl=topleft, etc
+  # x-coordinates of interactions: tl=topleft, etc
+  web.df_2[, c("xcoord.tl", "xcoord.tr", "xcoord.br", "xcoord.bl")] <- NA 
 
   # low coordinates for interactions (in order of the web.df)
   for (i in unique(web.df_2$row)) { # for i in lower species
-    # i <- 3
     links.i <- web.df_2[web.df_2$row == i, ]
     relpos <- cumsum(links.i$weight) / sum(links.i$weight)
     coords.int.low <- (r_xl_2[i] + relpos * (r_xr_2[i] - r_xl_2[i]))
