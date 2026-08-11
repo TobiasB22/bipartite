@@ -38,9 +38,21 @@ plotweb_pair <- function(web1,
                          mai = NULL,
                          plot_axes = FALSE) {
 
-
   # Copy original par options
   op <- par(no.readonly = TRUE)
+
+  # Update the user defined margin in either rows or inches
+  if (!is.null(mar)) {
+    if (!is.null(title)) {
+      mar <- mar + c(0, 0, 1, 0)
+    }
+    par(mar = mar)
+  }
+  if (!is.null(mai)) {
+    par(mai = mai)
+  }
+  # Extract newly set margin in inches
+  mai <- par()$mai
 
   # Check whether the webs have named rows and columns
   # and if not fill them in.
@@ -327,6 +339,53 @@ plotweb_pair <- function(web1,
 
   }
 
+  ################# auto text_size ###################################
+  ## TODO: Implement label rotation and add the angles here.
+  if (text_size == "auto") {
+    ### TODO: remove hard-coding here
+    theta_pi <- 90
+    # Get the size of the plotting device in inches
+    dev_size <- dev.size("in")
+
+    c_height_1 <- strwidth(c_names[1], units = "inches")
+    c_height_1 <- cos(theta_pi) * c_height_1
+    r_height_1 <- strwidth(r_names, units = "inches")
+    r_height_1 <- cos(theta_pi) * r_height_1
+
+    c_height_n <- strwidth(c_names[nc], units = "inches")
+    c_height_n <- cos(theta_pi) * c_height_n
+    r_height_n <- strwidth(r_names[nr], units = "inches")
+    r_height_n <- cos(theta_pi) * r_height_n
+
+    max_height_1 <- max(c_height_1, -r_height_1)
+    max_height_n <- max(-c_height_n, r_height_n)
+    # Substract the margings from the total device size
+    # to get the actual plotting area.
+    if (horizontal) {
+      dev_height <- dev_size[2] - mai[1] - mai[3] - max_height_1 - max_height_n
+      dev_max <- spacing * dev_height
+    } else {
+      dev_width <- dev_size[1] - mai[2] - mai[4] - max_height_1 - max_height_n
+      dev_max <- spacing * dev_width
+    }
+    a <- theta_pi - pi / 2
+    # TODO: Trust the math
+    min_distance_at_angle <- tan(a)^2 * abs(cos(a)) + abs(cos(a))
+    # if (theta < 45 || theta > 315 || (theta > 135 && theta < 225)) {
+    if (min_distance_at_angle > max(nchar(c(c_names, r_names)))) {
+      sum_str_h <- sum(strwidth(c_names, units = "inches"))
+      sum_str_l <- sum(strwidth(r_names, units = "inches"))
+    } else {
+      sum_str_h <- 1.25 * min_distance_at_angle * sum(strheight(c_names, units = "inches"))
+      sum_str_l <- 1.25 * min_distance_at_angle * sum(strheight(r_names, units = "inches"))
+    }
+    if (sum_str_h > dev_max || sum_str_l > dev_max) {
+      text_size <- min(dev_max / sum_str_h, dev_max / sum_str_l)
+    } else {
+      text_size <- 1
+    }
+  }
+
   ################ PLOT 1 (LEFT / HIGHER) ###################################
 
   # Get the maximum width values of the inner and outer labels in inches.
@@ -368,51 +427,6 @@ plotweb_pair <- function(web1,
   } else {
     space_higher <- spacing
     space_lower <- spacing
-  }
-
-  ################# auto text_size ###################################
-  ## TODO: Implement label rotation and add the angles here.
-  if (text_size == "auto") {
-    # Get the size of the plotting device in inches
-    dev_size <- dev.size("in")
-
-    c_height_1 <- strwidth(c_names[1], units = "inches")
-    c_height_1 <- cos(theta_pi) * c_height_1
-    r_height_1 <- strwidth(lower_labels[1], units = "inches")
-    r_height_1 <- cos(theta_pi) * r_height_1
-
-    c_height_n <- strwidth(higher_labels[nc], units = "inches")
-    c_height_n <- cos(theta_pi) * c_height_n
-    r_height_n <- strwidth(lower_labels[nr], units = "inches")
-    r_height_n <- cos(theta_pi) * r_height_n
-
-    max_height_1 <- max(c_height_1, -r_height_1)
-    max_height_n <- max(-c_height_n, r_height_n)
-    # Substract the margings from the total device size
-    # to get the actual plotting area.
-    dev_width <- dev_size[1] - mai[2] - mai[4] - max_height_1 - max_height_n
-    dev_height <- dev_size[2] - mai[1] - mai[3] - max_height_1 - max_height_n
-    if (horizontal) {
-      dev_max <- spacing * dev_height
-    } else {
-      dev_max <- spacing * dev_width
-    }
-    a <- theta_pi - pi / 2
-    # TODO: Trust the math
-    min_distance_at_angle <- tan(a)^2 * abs(cos(a)) + abs(cos(a))
-    # if (theta < 45 || theta > 315 || (theta > 135 && theta < 225)) {
-    if (min_distance_at_angle > max(nchar(c(higher_labels, lower_labels)))) {
-      sum_str_h <- sum(strwidth(higher_labels, units = "inches"))
-      sum_str_l <- sum(strwidth(lower_labels, units = "inches"))
-    } else {
-      sum_str_h <- 1.25 * min_distance_at_angle * sum(strheight(higher_labels, units = "inches"))
-      sum_str_l <- 1.25 * min_distance_at_angle * sum(strheight(lower_labels, units = "inches"))
-    }
-    if (sum_str_h > dev_max || sum_str_l > dev_max) {
-      text_size <- min(dev_max / sum_str_h, dev_max / sum_str_l)
-    } else {
-      text_size <- 1
-    }
   }
 
   ################# Calculate the box sizes ###################################
